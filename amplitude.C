@@ -1,0 +1,133 @@
+#include <iostream>
+#include <fstream>
+#include <getopt.h>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <ostream>
+#include <iomanip>
+#include <cstdlib>
+
+#include <TH2.h>
+#include <TROOT.h>
+#include <TCanvas.h>
+#include <TString.h>
+#include <TFile.h>
+#include <TLegend.h>
+#include <TF1.h>
+#include <TGraphErrors.h>
+#include <TGraphAsymmErrors.h>
+#include <TPad.h>
+
+
+#include "QCuore.hh"
+#include "QError.hh"
+#include "QObject.hh"
+#include "QGlobalHandle.hh"
+#include "QMessage.hh"
+#include "QGlobalDataManager.hh"
+#include "QDetChannelCollectionHandle.hh"
+#include "QDetChannelCollection.hh"
+#include "QHeader.hh"
+#include "QPulseInfo.hh"
+#include "QChain.hh"
+#include "QTObject.hh"
+#include "QTObjectHandle.hh"
+
+using namespace std;
+using namespace Cuore;
+
+int main(int argc, char* argv[]){
+
+  std::vector<int> channel;
+  std::vector<int>::iterator it;
+  int tower,x;
+  int run_number [14];
+  run_number[0]=303396;
+  run_number[1]=303398;
+  run_number[2]=303399;
+  run_number[3]=303400;
+  run_number[4]=303406;
+  run_number[5]=303408;
+  run_number[6]=303409;
+  run_number[7]=303410;
+  run_number[8]=303411;
+  run_number[9]=303413;
+  run_number[10]=303414;
+  run_number[11]=303415;
+  run_number[12]=303416;
+  run_number[13]=303417;
+
+  ifstream channel_file(argv[1]);
+  if(!channel_file){
+    cout<<"!!!!!!!! Unable to open channel list file !!!!!!!!!"<<endl;
+  }
+
+  string file_line;
+  while(getline(channel_file,file_line)){
+    stringstream ss(file_line);
+    ss>>x;
+    cout<<"-------- channel being added is --------"<<x<<endl;
+    channel.push_back(x);
+  }
+  
+  TString cut_baseline,listname;
+  
+  for(it=channel.begin();it!=channel.end();it++){
+    if(*it%52==0){tower=(*it)/52;}
+    else{tower=((*it)/52+1);}
+    cout<<"Tower being worked on is "<<tower<<endl;
+    cout<<"Channel being worked on is "<<(*it)<<endl;
+    for(int i=0;i<4;i++){
+      if(run_number[i]<303401){
+        listname.Form("/nfs/cuore1/scratch/vsharma/diana_ds3090_official/output/ds3090/Production_%d_%.3d_C.list",run_number[i],tower);
+      }
+      if(run_number[i]>303401){
+        listname.Form("/nfs/cuore1/scratch/vsharma/diana_ds3090_official/output/ds3090/Production_%d_%.3d_B.list",run_number[i],tower);
+      }
+      
+      QChain ch("qtree");
+      int nAdded=ch.Add(listname.Data());
+      if(nAdded==0){cout<<"Failed to add list file for run "<<run_number<<" and channel "<<channel<<endl;}
+    
+      
+      cut_baseline.Form("Channel==%d",(*it)); 
+      
+      unsigned int sizeArr1=ch.Draw("OF_Amplitude",cut_baseline.Data(),"GOFF");
+      
+      double* stab = ch.GetV1();
+      double* time = ch.GetV2();
+      double* Stab = new double [sizeArr1];
+      double* Time = new double [sizeArr1];
+      
+      cout<<"Baseline vs Time"<<endl;
+      
+      for(int j=0;j<sizeArr1;j++){
+	Stab[j]=stab[j];
+	Time[j]=time[j];
+      }
+      
+      cout<<"Data copy finished"<<endl;
+      
+      TH2D* h_stab_time = new TH2D("stab_time","OF_Amplitude vs Time",1000,0,90000,1000,0,10000);
+      //h_baseline->FillN(sizeArr1,Baseline,0,Amplitude,1);
+      for(int j=0;j<sizeArr1;j++){
+	h_stab_time->Fill(Time[j],Stab[j]);
+      }
+      TString stab_histo_title = Form("OF_Amplitude vs Time {Channel==%d && IsStabPulser}",(*it));
+      h_stab_time->GetXaxis()->SetTitle("Time");
+      h_stab_time->GetYaxis()->SetTitle("OF_Amplitude");
+      //h_stab_time->SetTitleOffset(1.3,"y");
+      h_stab_time->SetTitle(stab_histo_title);
+      h_stab_time->SetMarkerStyle(2);
+      h_stab_time->SetMarkerSize(0.6);
+      TCanvas* c1 = new TCanvas("c1"," ",800,600);
+      c1->cd();
+      //h_stab_time->SetStats(0);
+      h_stab_time->Draw();
+      TString stab_title = Form("amplitude_vs_time_run%d_ch%d_C.pdf",run_number[i],(*it));
+      c1->SaveAs(stab_title);
+    }
+  }
+  return 0;
+}

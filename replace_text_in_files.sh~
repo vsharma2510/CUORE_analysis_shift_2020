@@ -1,0 +1,2 @@
+#!/bin/bash
+sed -i -- 's/DATAPATH \/nfs\/cuore1\/scratch\/vsharma\/diana_ds3090_official\/output\/ds3090/DATAPATH \/nfs\/cuore1\/scratch\/vsharma\/Miscalibration_exteranl_install\/cuore_issue_314\/output\/ds3090' ./Production_303*.list

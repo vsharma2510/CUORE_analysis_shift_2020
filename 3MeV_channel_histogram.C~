@@ -1,0 +1,20 @@
+{
+  ifstream input_file;
+  input_file.open("/nfs/cuore_ssd/scratch/vsharma/diana_ds3090_official/3MeV_channel_list_nhw.txt");
+  
+  int x,temp,i=0;
+  double Energy;
+  string file_line;
+  TH1D* h = new TH1D("h","h",1500,3000,4500);
+  while(getline(input_file,file_line)){
+    stringstream ss(file_line);
+    ss>>x>>Energy>>temp;
+    i++;
+    if(x==309){
+      cout<<"--------Channel being added is "<<x<<"-----------"<<endl;
+      h->Fill(Energy);
+    }
+  }
+  cout<<"Number of channels is "<<i<<endl;
+  h->Draw();
+}

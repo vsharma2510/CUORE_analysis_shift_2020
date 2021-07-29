@@ -1,0 +1,69 @@
+#include <vector>
+#include <string>
+#include <sstream>
+#include <ostream>
+#include <iomanip>
+#include <cstdlib>
+
+#include <TH2.h>
+#include <TROOT.h>
+#include <TCanvas.h>
+#include <TString.h>
+#include <TFile.h>
+#include <TLegend.h>
+#include <TF1.h>
+#include <TGraphErrors.h>
+#include <TGraphAsymmErrors.h>
+#include <TPad.h>
+
+
+#include "QCuore.hh"
+#include "QError.hh"
+#include "QObject.hh"
+#include "QGlobalHandle.hh"
+#include "QMessage.hh"
+#include "QGlobalDataManager.hh"
+#include "QDetChannelCollectionHandle.hh"
+#include "QDetChannelCollection.hh"
+#include "QHeader.hh"
+#include "QPulseInfo.hh"
+#include "QChain.hh"
+#include "QTObject.hh"
+#include "QTObjectHandle.hh"
+
+using namespace std;
+using namespace Cuore;
+
+int main(int argc, char* argv[]){
+
+  std::vector<int> channel;
+  std::vector<int>::iterator it;
+  int tower,x;
+  int run_number [14];
+  run_number[0]=303396;
+  run_number[1]=303398;
+  run_number[2]=303399;
+  run_number[3]=303400;
+  run_number[4]=303406;
+  run_number[5]=303408;
+  run_number[6]=303409;
+  run_number[7]=303410;
+  run_number[8]=303411;
+  run_number[9]=303413;
+  run_number[10]=303414;
+  run_number[11]=303415;
+  run_number[12]=303416;
+  run_number[13]=303417;
+
+  ifstream channel_file(argv[1]);
+  if(!channel_file){
+    cout<<"!!!!!!!! Unable to open channel list file !!!!!!!!!"<<endl;
+  }
+
+  string file_line;
+  while(getline(channel_file,file_line)){
+    stringstream ss(file_line);
+    ss>>x;
+    cout<<"-------- channel being added is --------"<<x<<endl;
+    channel.push_back(x);
+  }
